@@ -26,6 +26,56 @@
 
 unsigned int memory[MEMORY_SIZE]; 
 
+void testProgram1() {
+    memory[0] = 0x8C280000;
+    memory[1] = 0x8C290004;
+    memory[2] = 0x01095020;
+    memory[3] = 0xAC2A0008;
+}
+
+void testProgram2(CPU_p cpu) {
+    cpu->reg_file[8] = 2;
+    cpu->reg_file[9] = 3;
+    cpu->reg_file[10] = 7;
+    memory[0] = 0x812a4020;
+}
+
+void testProgram3(CPU_p cpu) {
+    cpu->reg_file[8] = 2;
+    cpu->reg_file[9] = 3;
+    cpu->reg_file[10] = 7;
+    cpu->reg_file[11] = 4;
+    memory[0] = 0x014b4820;
+}
+
+void testProgram4(CPU_p cpu) {
+    cpu->reg_file[8] = 2;
+    cpu->reg_file[9] = 3;
+    cpu->reg_file[10] = 7;
+    cpu->reg_file[11] = 4;
+    memory[0] = 0x8C08000A;
+}
+
+void testProgram5(CPU_p cpu) {
+    //memory[0] = 0x8C08002C;
+    memory[1] = 0x8C090030;
+    memory[2] = 0x014b4820;
+    memory[10] = 0xFFFFFFFF;
+    memory[11] = 15;
+    memory[12] = 9;
+}
+
+void testProgram6(CPU_p cpu) {
+    //memory[0] = 0x8C08002C;
+    memory[0] = 0x8C0A002C;
+    memory[1] = 0x8C0B0030;
+    memory[2] = 0x014b4820;
+    memory[3] = 0xAC090034; //store register 9 into memory address 13
+    memory[4] = 0xFFFFFFFF;
+    memory[11] = 15;
+    memory[12] = 9;
+}
+
 void purgeBuffer() {
    char c; 
    c = getchar();
@@ -86,7 +136,7 @@ int loadData() {
    // Register startingIndex = strtol(line, NULL, 16);
    // int i = startingIndex;
    while (fgets(line, sizeof(line), file) && i < MEMORY_SIZE) {
-      memory[i] = strtol(line, NULL, 16);
+      memory[i] = strtoul(line, NULL, 16);
       i++;
    }
    printf("done.\n");
@@ -224,7 +274,10 @@ int controller (CPU_p cpu) {
 	 Byte opcode = 0, rd = 0, rs = 0, rt = 0, immed;
 	 int run = 0;
 	 initMemory();
-	 initRegisters(cpu); 
+	 initRegisters(cpu);
+     
+     testProgram6(cpu);
+      
     for(;;) {   // efficient endless loop
         switch (state) {
             case FETCH: 
@@ -241,20 +294,26 @@ int controller (CPU_p cpu) {
                 opcode = getOPCODE(cpu);
                 switch (opcode) {
                     case ADD:
+                        printf("ADD operation\n");
                         rd = getRD(cpu);
                         rs = getRS(cpu);
                         rt = getRT(cpu);
+                        printf("rd: %d, rs: %d, rt: %d\n", rd, rs, rt);
                         break;
                     case LW:
+                        printf("LW operation\n");
                         rs = getRS(cpu);			
                         rt = getRT(cpu);
                         immed = getIMMED(cpu);
+                        printf("rs: %d, rt: %d, immed: %d\n", rs, rt, immed);
                         break;
                     case LA:		
+                        printf("LA operation\n");
                         rt = getRT(cpu);
                         immed = getIMMED(cpu);
                         break;
                     case SW:
+                        printf("SW operation\n");
                         rt = getRT(cpu);
                         rs = getRS(cpu);
                         immed = getIMMED(cpu);
@@ -271,6 +330,7 @@ int controller (CPU_p cpu) {
                       cpu->mdr = alu_ADD(cpu);
                       break;
                    case LW:
+                      printf("rs: %d\n", rs);
                       cpu->alu->a = cpu->reg_file[rs];
                       cpu->alu->b = immed/4;
                       cpu->mar = alu_ADD(cpu);
@@ -294,6 +354,7 @@ int controller (CPU_p cpu) {
                    case LW:
                       /*Load the target register with the data in cpu->mdr. */
                       cpu->mdr = memory[cpu->mar];
+                      printf("mar: %d, mdr: %d\n", cpu->mar, cpu->mdr);
                       break;
                    case LA:
                       /*Load the target register with the value of alu->r. */
@@ -301,6 +362,7 @@ int controller (CPU_p cpu) {
                       break;
                    case SW:
                       memory[cpu->mar] = cpu->reg_file[rt];
+                      printf("mar: %d, rt: %d\n", cpu->mar, rt);
                       break;
                    default: break;
                 }
@@ -314,6 +376,7 @@ int controller (CPU_p cpu) {
                       break;
                    case LW:
                       cpu->reg_file[rt] = cpu->mdr;
+                      printf("rt: %d\n", rt);
                       break;
                    case LA:
                       cpu->reg_file[rd] = cpu->mar;
