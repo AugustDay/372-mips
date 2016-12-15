@@ -1,0 +1,15 @@
+#Austin Ingraham & George Summers
+#NOTE: use input.hex when loading into simulator
+.text
+.globl main
+main:
+    lw  $t1 int1            # 0x8C0A002C
+    lw  $t2 int2            # 0x8C0B0030
+    add $t0, $t1, $t2       # 0x014b4820
+    sw  $t0 int3            # 0xAC090034
+    li  $v0,    10
+    syscall                 
+.data
+    int1:   .word 15        # 0x0000000F
+    int2:   .word 9         # 0x00000009
+    int3:   .word 0         
