@@ -1,0 +1,2 @@
+MIPS: 32 registers
+32-bit 
